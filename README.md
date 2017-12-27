@@ -15,6 +15,16 @@ To get started using Nutch read Tutorial:
 
    http://wiki.apache.org/nutch/NutchTutorial
    
+# Features
+
+This fork created to solve few problems of original Apache Nutch:
+
+1) Already configured for using with Selenium Grid and correct crawling of dynamic SPA websites based on Angular or similar frontend frameworks.
+
+2) Supports HTTPS protocol with Selenium plugin.
+
+3) Has some specific configuration for best performance in Selenium Grid.
+   
 Contributing
 ============
 To contribute a patch, follow these instructions (note that installing

@@ -6,3 +6,8 @@ build/
 runtime/
 logs/
 /bin/
+.classpath
+.idea/
+.project
+ivy/ivy-2.4.0.jar
+nutch.iml
