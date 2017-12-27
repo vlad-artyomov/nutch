@@ -60,8 +60,8 @@ public class HttpResponse implements Response {
     this.orig = url.toString();
     this.base = url.toString();
 
-    if (!"http".equals(url.getProtocol()))
-      throw new HttpException("Not an HTTP url:" + url);
+//    if (!"http".equals(url.getProtocol()))
+//      throw new HttpException("Not an HTTP url:" + url);
 
     if (Http.LOG.isTraceEnabled()) {
       Http.LOG.trace("fetching " + url);
