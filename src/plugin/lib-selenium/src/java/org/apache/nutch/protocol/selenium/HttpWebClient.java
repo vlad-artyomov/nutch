@@ -16,20 +16,13 @@
  */
 package org.apache.nutch.protocol.selenium;
 
-import java.lang.invoke.MethodHandles;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.util.concurrent.TimeUnit;
-
+import com.opera.core.systems.OperaDriver;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
@@ -39,15 +32,22 @@ import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.io.TemporaryFilesystem;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
+import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.safari.SafariDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.opera.core.systems.OperaDriver;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 public class HttpWebClient {
 
@@ -192,6 +192,13 @@ public class HttpWebClient {
     try {
       if (conf.getBoolean("take.screenshot", false)) {
         takeScreenshot(driver, conf);
+      }
+
+      driver.manage().window().setSize(new Dimension(1920, 1080));
+      Long sleepTime = conf.getLong("html.get.delay", 0);
+      if (sleepTime != 0) {
+        System.out.println(String.format("Waiting %d seconds before HTML content fetching", sleepTime));
+        Thread.sleep(sleepTime * 1000);
       }
 
       String innerHtml = driver.findElement(By.tagName("body")).getAttribute("innerHTML");

@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+    <property>
+        <name>http.agent.name</name>
+        <value>Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71
+            Safari/537.36
+        </value>
+    </property>
+
+    <property>
+        <name>plugin.includes</name>
+        <value>protocol-selenium|urlfilter-(regex|validator)|parse-(html|tika)|index-(basic|anchor)|indexer-solr|scoring-opic|urlnormalizer-(pass|regex|basic)</value>
+        <description>Regular expression naming plugin directory names to
+            include. Any plugin not matching this expression is excluded.
+            In any case you need at least include the nutch-extensionpoints plugin. By
+            default Nutch includes crawling just HTML and plain text via HTTP,
+            and basic indexing and search plugins. In order to use HTTPS please enable
+            protocol-httpclient, but be aware of possible intermittent problems with the
+            underlying commons-httpclient library. Set parsefilter-naivebayes for classification based focused crawler.
+        </description>
+    </property>
+
+    <property>
+        <name>db.max.outlinks.per.page</name>
+        <value>-1</value>
+        <description>The maximum number of outlinks that we'll process for a page.
+            If this value is nonnegative (>=0), at most db.max.outlinks.per.page outlinks
+            will be processed for a page; otherwise, all outlinks will be processed.
+        </description>
+    </property>
+
+    <property>
+        <name>file.content.limit</name>
+        <value>-1</value>
+        <description>The length limit for downloaded content using the file://
+            protocol, in bytes. If this value is nonnegative (>=0), content longer
+            than it will be truncated; otherwise, no truncation at all. Do not
+            confuse this setting with the http.content.limit setting.
+        </description>
+    </property>
+
+    <property>
+        <name>http.content.limit</name>
+        <value>-1</value>
+        <description>The length limit for downloaded content using the http://
+            protocol, in bytes. If this value is nonnegative (>=0), content longer
+            than it will be truncated; otherwise, no truncation at all. Do not
+            confuse this setting with the file.content.limit setting.
+        </description>
+    </property>
+
+    <property>
+        <name>parser.skip.truncated</name>
+        <value>false</value>
+        <description>Boolean value for whether we should skip parsing for truncated documents. By default this
+            property is activated due to extremely high levels of CPU which parsing can sometimes take.
+        </description>
+    </property>
+
+    <!-- protocol-selenium plugin properties -->
+
+    <property>
+        <name>selenium.driver</name>
+        <value>remote</value>
+        <description>
+            A String value representing the flavour of Selenium
+            WebDriver() to use. Currently the following options
+            exist - 'firefox', 'chrome', 'safari', 'opera', 'phantomJS', and 'remote'.
+            If 'remote' is used it is essential to also set correct properties for
+            'selenium.hub.port', 'selenium.hub.path', 'selenium.hub.host' and
+            'selenium.hub.protocol'.
+        </description>
+    </property>
+
+    <property>
+        <name>selenium.take.screenshot</name>
+        <value>false</value>
+        <description>
+            Boolean property determining whether the protocol-selenium
+            WebDriver should capture a screenshot of the URL. If set to
+            true remember to define the 'selenium.screenshot.location'
+            property as this determines the location screenshots should be
+            persisted to on HDFS. If that property is not set, screenshots
+            are simply discarded.
+        </description>
+    </property>
+
+    <property>
+        <name>selenium.screenshot.location</name>
+        <value></value>
+        <description>
+            The location on disk where a URL screenshot should be saved
+            to if the 'selenium.take.screenshot' proerty is set to true.
+            By default this is null, in this case screenshots held in memory
+            are simply discarded.
+        </description>
+    </property>
+
+    <property>
+        <name>selenium.hub.port</name>
+        <value>4444</value>
+        <description>Selenium Hub Location connection port</description>
+    </property>
+
+    <property>
+        <name>selenium.hub.path</name>
+        <value>/wd/hub</value>
+        <description>Selenium Hub Location connection path</description>
+    </property>
+
+    <property>
+        <name>selenium.hub.host</name>
+        <value>localhost</value>
+        <description>Selenium Hub Location connection host in Docker</description>
+    </property>
+
+    <property>
+        <name>selenium.hub.protocol</name>
+        <value>http</value>
+        <description>Selenium Hub Location connection protocol</description>
+    </property>
+
+    <property>
+        <name>selenium.grid.driver</name>
+        <value>firefox</value>
+        <description>A String value representing the flavour of Selenium
+            WebDriver() used on the selenium grid. Currently the following options
+            exist - 'firefox' or 'phantomjs'
+        </description>
+    </property>
+
+    <property>
+        <name>selenium.grid.binary</name>
+        <value>/usr/bin/firefox</value>
+        <description>A String value representing the path to the browser binary
+            location for each node
+        </description>
+    </property>
+
+    <!-- plugin properties that applies to lib-selenium, protocol-selenium,
+     protocol-interactiveselenium, lib-htmlunit, protocol-htmlunit -->
+    <property>
+        <name>page.load.delay</name>
+        <value>3</value>
+        <description>
+            The delay in seconds to use when loading a page with htmlunit or selenium.
+        </description>
+    </property>
+
+    <!-- Nutch parameters to optimize crawl speed with Selenium -->
+    <property>
+        <name>fetcher.threads.per.queue</name>
+        <value>20</value>
+        <description>This number is the maximum number of threads that
+            should be allowed to access a queue at one time. Setting it to
+            a value > 1 will cause the Crawl-Delay value from robots.txt to
+            be ignored and the value of fetcher.server.min.delay to be used
+            as a delay between successive requests to the same server instead
+            of fetcher.server.delay.
+        </description>
+    </property>
+
+    <property>
+        <name>fetcher.threads.fetch</name>
+        <value>20</value>
+        <description>The number of FetcherThreads the fetcher should use.
+            This is also determines the maximum number of requests that are
+            made at once (each FetcherThread handles one connection). The total
+            number of threads running in distributed mode will be the number of
+            fetcher threads * number of nodes as fetcher has one map task per node.
+        </description>
+    </property>
+
+    <property>
+        <name>fetcher.server.delay</name>
+        <value>5.0</value>
+        <description>The number of seconds the fetcher will delay between
+            successive requests to the same server. Note that this might get
+            overridden by a Crawl-Delay from a robots.txt and is used ONLY if
+            fetcher.threads.per.queue is set to 1.
+        </description>
+    </property>
+
+    <property>
+        <name>fetcher.server.min.delay</name>
+        <value>5.0</value>
+        <description>The minimum number of seconds the fetcher will delay between
+            successive requests to the same server. This value is applicable ONLY
+            if fetcher.threads.per.queue is greater than 1 (i.e. the host blocking
+            is turned off).
+        </description>
+    </property>
+
+    <property>
+        <name>html.get.delay</name>
+        <value>5</value>
+        <description>The minimum number of seconds to wait before the fetcher gets HTML content of page.</description>
+    </property>
+
+</configuration>

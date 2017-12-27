@@ -2734,4 +2734,10 @@ If true (default) the Sitemap parser rejects URLs not sharing the same
     fit with your crawler configuration.
    </description>
 </property>
+
+<property>
+  <name>html.get.delay</name>
+  <value>0</value>
+  <description>The minimum number of seconds to wait before the fetcher gets HTML content of page.</description>
+</property>
 </configuration>

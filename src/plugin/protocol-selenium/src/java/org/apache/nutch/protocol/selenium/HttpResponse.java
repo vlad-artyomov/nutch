@@ -17,15 +17,6 @@
 package org.apache.nutch.protocol.selenium;
 
 // JDK imports
-import java.io.BufferedInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.PushbackInputStream;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.URL;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.nutch.crawl.CrawlDatum;
@@ -34,8 +25,23 @@ import org.apache.nutch.metadata.SpellCheckedMetadata;
 import org.apache.nutch.net.protocols.HttpDateFormat;
 import org.apache.nutch.net.protocols.Response;
 import org.apache.nutch.protocol.ProtocolException;
-import org.apache.nutch.protocol.http.api.HttpException;
 import org.apache.nutch.protocol.http.api.HttpBase;
+import org.apache.nutch.protocol.http.api.HttpException;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PushbackInputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /* Most of this code was borrowed from protocol-htmlunit; which in turn borrowed it from protocol-httpclient */
 
@@ -52,6 +58,10 @@ public class HttpResponse implements Response {
   /** The nutch configuration */
   private Configuration conf = null;
 
+  protected enum Scheme {
+    HTTP, HTTPS,
+  }
+
   public HttpResponse(Http http, URL url, CrawlDatum datum) throws ProtocolException, IOException {
 
     this.conf = http.getConf();
@@ -60,8 +70,15 @@ public class HttpResponse implements Response {
     this.orig = url.toString();
     this.base = url.toString();
 
-//    if (!"http".equals(url.getProtocol()))
-//      throw new HttpException("Not an HTTP url:" + url);
+    Scheme scheme = null;
+
+    if ("http".equals(url.getProtocol())) {
+      scheme = Scheme.HTTP;
+    } else if ("https".equals(url.getProtocol())) {
+      scheme = Scheme.HTTPS;
+    } else {
+      throw new HttpException("Unknown scheme (not http/https) for url:" + url);
+    }
 
     if (Http.LOG.isTraceEnabled()) {
       Http.LOG.trace("fetching " + url);
@@ -77,7 +94,11 @@ public class HttpResponse implements Response {
     int port;
     String portString;
     if (url.getPort() == -1) {
-      port = 80;
+      if (scheme == Scheme.HTTP) {
+        port = 80;
+      } else {
+        port = 443;
+      }
       portString = "";
     } else {
       port = url.getPort();
@@ -94,6 +115,34 @@ public class HttpResponse implements Response {
       int sockPort = http.useProxy(url) ? http.getProxyPort() : port;
       InetSocketAddress sockAddr = new InetSocketAddress(sockHost, sockPort);
       socket.connect(sockAddr, http.getTimeout());
+
+      if (scheme == Scheme.HTTPS) {
+        SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory
+                .getDefault();
+        SSLSocket sslsocket = (SSLSocket) factory
+                .createSocket(socket, sockHost, sockPort, true);
+        sslsocket.setUseClientMode(true);
+
+        // Get the protocols and ciphers supported by this JVM
+        Set<String> protocols = new HashSet<String>(
+                Arrays.asList(sslsocket.getSupportedProtocols()));
+        Set<String> ciphers = new HashSet<String>(
+                Arrays.asList(sslsocket.getSupportedCipherSuites()));
+
+        // Intersect with preferred protocols and ciphers
+        protocols.retainAll(http.getTlsPreferredProtocols());
+        ciphers.retainAll(http.getTlsPreferredCipherSuites());
+
+        sslsocket.setEnabledProtocols(
+                protocols.toArray(new String[protocols.size()]));
+        sslsocket.setEnabledCipherSuites(
+                ciphers.toArray(new String[ciphers.size()]));
+
+        sslsocket.startHandshake();
+        socket = sslsocket;
+      }
+
+
 
       // make request
       OutputStream req = socket.getOutputStream();
@@ -145,8 +194,8 @@ public class HttpResponse implements Response {
       req.flush();
 
       PushbackInputStream in = // process response
-          new PushbackInputStream(new BufferedInputStream(socket.getInputStream(), Http.BUFFER_SIZE),
-              Http.BUFFER_SIZE);
+              new PushbackInputStream(new BufferedInputStream(socket.getInputStream(), Http.BUFFER_SIZE),
+                      Http.BUFFER_SIZE);
 
       StringBuffer line = new StringBuffer();
 
@@ -162,7 +211,7 @@ public class HttpResponse implements Response {
       // Get Content type header
       String contentType = getHeader(Response.CONTENT_TYPE);
 
-      // handle with Selenium only if content type in HTML or XHTML 
+      // handle with Selenium only if content type in HTML or XHTML
       if (contentType != null) {
         if (contentType.contains("text/html") || contentType.contains("application/xhtml")) {
           readPlainContent(url);
@@ -187,7 +236,7 @@ public class HttpResponse implements Response {
             int totalRead = 0;
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             while ((bufferFilled = in.read(buffer, 0, buffer.length)) != -1
-                && totalRead + bufferFilled <= contentLength) {
+                    && totalRead + bufferFilled <= contentLength) {
               totalRead += bufferFilled;
               out.write(buffer, 0, bufferFilled);
             }
@@ -204,7 +253,7 @@ public class HttpResponse implements Response {
             }
           }
         }
-      } 
+      }
 
     } finally {
       if (socket != null)
@@ -300,7 +349,7 @@ public class HttpResponse implements Response {
       // handle HTTP responses with missing blank line after headers
       int pos;
       if (((pos = line.indexOf("<!DOCTYPE")) != -1) || ((pos = line.indexOf("<HTML")) != -1)
-          || ((pos = line.indexOf("<html")) != -1)) {
+              || ((pos = line.indexOf("<html")) != -1)) {
 
         in.unread(line.substring(pos).getBytes("UTF-8"));
         line.setLength(pos);
@@ -324,29 +373,29 @@ public class HttpResponse implements Response {
   }
 
   private static int readLine(PushbackInputStream in, StringBuffer line, boolean allowContinuedLine)
-      throws IOException {
+          throws IOException {
     line.setLength(0);
     for (int c = in.read(); c != -1; c = in.read()) {
       switch (c) {
-      case '\r':
-        if (peek(in) == '\n') {
-          in.read();
-        }
-      case '\n':
-        if (line.length() > 0) {
-          // at EOL -- check for continued line if the current
-          // (possibly continued) line wasn't blank
-          if (allowContinuedLine)
-            switch (peek(in)) {
-            case ' ':
-            case '\t': // line is continued
-              in.read();
-              continue;
-            }
-        }
-        return line.length(); // else complete
-      default:
-        line.append((char) c);
+        case '\r':
+          if (peek(in) == '\n') {
+            in.read();
+          }
+        case '\n':
+          if (line.length() > 0) {
+            // at EOL -- check for continued line if the current
+            // (possibly continued) line wasn't blank
+            if (allowContinuedLine)
+              switch (peek(in)) {
+                case ' ':
+                case '\t': // line is continued
+                  in.read();
+                  continue;
+              }
+          }
+          return line.length(); // else complete
+        default:
+          line.append((char) c);
       }
     }
     throw new EOFException();
