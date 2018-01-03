@@ -17,7 +17,9 @@
 package org.apache.nutch.util;
 
 import java.io.IOException;
+import java.util.Arrays;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -60,6 +62,27 @@ public class HadoopFSUtil {
       res[i] = stats[i].getPath();
     }
     return res;
+  }
+
+  /**
+   * Returns path of last modified segment in segments directory on HDFS.
+   *
+   * @param segmentDir folder where all segments located
+   * @param configuration Hadoop configuration
+   * @return Path of newest segment.
+   * @throws IOException in case of IO errors.
+   */
+  public static Path getLastModifiedSegment(String segmentDir, Configuration configuration) throws IOException {
+    Path segment_dir = new Path(segmentDir);
+    FileSystem fs = segment_dir.getFileSystem(configuration);
+    FileStatus[] fileStatuses = fs.listStatus(segment_dir);
+    Arrays.sort(fileStatuses, (f1, f2) -> {
+      if (f1.getModificationTime() > f2.getModificationTime())
+        return -1;
+      else
+        return 0;
+    });
+    return fileStatuses[0].getPath();
   }
 
 }

@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.crawl.SignatureFactory;
 import org.apache.nutch.segment.SegmentChecker;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.*;
@@ -286,16 +285,7 @@ public class ParseSegment extends NutchTool implements Tool,
     	}
     }
     else {
-    	String segment_dir = crawlId+"/segments";
-        File segmentsDir = new File(segment_dir);
-        File[] segmentsList = segmentsDir.listFiles();  
-        Arrays.sort(segmentsList, (f1, f2) -> {
-          if(f1.lastModified()>f2.lastModified())
-            return -1;
-          else
-            return 0;
-        });
-        segment = new Path(segmentsList[0].getPath());
+      segment = HadoopFSUtil.getLastModifiedSegment(crawlId + "/segments", getConf());
     }
     
     if (args.containsKey("nofilter")) {

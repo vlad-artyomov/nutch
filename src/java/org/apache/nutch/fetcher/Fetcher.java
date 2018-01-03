@@ -560,16 +560,7 @@ MapRunnable<Text, CrawlDatum, Text, NutchWritable> {
       }
     }
     else {
-      String segment_dir = crawlId+"/segments";
-      File segmentsDir = new File(segment_dir);
-      File[] segmentsList = segmentsDir.listFiles();  
-      Arrays.sort(segmentsList, (f1, f2) -> {
-        if(f1.lastModified()>f2.lastModified())
-          return -1;
-        else
-          return 0;
-      });
-      segment = new Path(segmentsList[0].getPath());
+      segment = HadoopFSUtil.getLastModifiedSegment(crawlId + "/segments", getConf());
     }
 
 

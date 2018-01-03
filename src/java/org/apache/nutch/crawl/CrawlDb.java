@@ -340,16 +340,7 @@ public class CrawlDb extends NutchTool implements Tool {
       }
     }
     else {
-      String segment_dir = crawlId+"/segments";
-      File dir = new File(segment_dir);
-      File[] segmentsList = dir.listFiles();  
-      Arrays.sort(segmentsList, (f1, f2) -> {
-        if(f1.lastModified()>f2.lastModified())
-          return -1;
-        else
-          return 0;
-      });
-      dirs.add(new Path(segmentsList[0].getPath()));
+      dirs.add(HadoopFSUtil.getLastModifiedSegment(crawlId + "/segments", getConf()));
     }
     try {
       update(crawlDb, dirs.toArray(new Path[dirs.size()]), normalize,

@@ -319,16 +319,7 @@ public class IndexingJob extends NutchTool implements Tool {
     }
 
     if(!isSegment){
-      String segment_dir = crawlId+"/segments";
-      File segmentsDir = new File(segment_dir);
-      File[] segmentsList = segmentsDir.listFiles();  
-      Arrays.sort(segmentsList, (f1, f2) -> {
-        if(f1.lastModified()>f2.lastModified())
-          return -1;
-        else
-          return 0;
-      });
-      Path segment = new Path(segmentsList[0].getPath());
+      Path segment = HadoopFSUtil.getLastModifiedSegment(crawlId + "/segments", getConf());
       segments.add(segment);
     }
 

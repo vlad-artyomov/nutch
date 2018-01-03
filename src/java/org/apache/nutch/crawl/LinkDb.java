@@ -404,16 +404,7 @@ public class LinkDb extends NutchTool implements Tool,
       }
     }
     else {
-      String segment_dir = crawlId+"/segments";
-      File dir = new File(segment_dir);
-      File[] segmentsList = dir.listFiles();  
-      Arrays.sort(segmentsList, (f1, f2) -> {
-        if(f1.lastModified()>f2.lastModified())
-          return -1;
-        else
-          return 0;
-      });
-      segs.add(new Path(segmentsList[0].getPath()));
+      segs.add(HadoopFSUtil.getLastModifiedSegment(crawlId + "/segments", getConf()));
     }
     try {
       invert(linkdb, segs.toArray(new Path[segs.size()]), normalize, filter, force);
